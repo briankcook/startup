@@ -35,16 +35,20 @@ function interval() {
 // display
 var ln = "<br />";
 
+function person(type) {
+  return "<div id='" + type.name + "' class='employee'>"
+         + "<img src='" + type.img + "' class='portrait' />"
+         + "<div class='name'>" + type.name + "</div>"
+         + "<div class='cost'>Cost: " + type.hire + "</div>"
+		 + "<div id='" + type.shortname + "count'class='count'>" + type.count + "</div></div>";
+}
+
 function button(type, action, label) {
   return "<a href='javascript:" + action + ";refresh();' class='" + type + " button'>" + label + "</a>";
 }
 
 function text(name, label, contents) {
   return "<span class='text'>" + label + "<ins id='" + name + "'>" + contents + "</ins></span>";
-}
-
-function table(id,a,b,c) {
-  return "<div id='" + id + "' class='employee'><div class='left'>" + a + "</div><div class='right'>" + b + "</div>" + c + "</div>";
 }
 
 function hirefirerow(type) {
@@ -62,46 +66,22 @@ function hirefirerow(type) {
 }
 
 function init() {
-  document.getElementById("body").innerHTML = ""
-  + ln 
+  document.getElementById("top").innerHTML = "<table width='100%' height='100%'><tr><td valign='middle'><div id='body'>"
+  + "<div id='employees'>"
+  + person(people.worker)
+  + person(people.manager)
+  + person(people.middleman)
+  + person(people.director)
+  + person(people.vp)
+  + person(people.fellow)
+  + person(people.officer)
+  + person(people.board)
+  + "</div><div id='interactive'>"
+  + "<div id='moneys'>$" + money.dollars + "</div>"
+  + "<div class='interactive'>"
   + button(null,"money.earn(100)","Work hard") 
-  + text("assets", "Assets: $" , money.dollars)
   + ln
   + text("revenue", "Revenue: " , (people.earnings() - places.rent()))
-  + ln
-  + "<div id='employees'>"
-  + table("workers", text("wcount", "Workers: " , people.worker.count),
-                     text("wcost", "Cost: $", people.worker.hire),
-					 hirefirerow("worker"))
-  + ln
-  + table("managers", text("mcount", "Managers: " , people.manager.count),
-                      text("mcost", "Cost: $", people.manager.hire),
-				   	  hirefirerow("manager"))
-  + ln
-  + table("middlemen", text("mmcount", "Middle Management: " , people.middleman.count),
-                       text("mmcost", "Cost: $", people.middleman.hire),
-					   hirefirerow("middleman"))
-  + ln
-  + table("directors", text("dcount", "Directors: " , people.director.count),
-                       text("dcost", "Cost: $", people.director.hire),
-					   hirefirerow("director"))
-  + ln
-  + table("vps", text("vpcount", "Vice Presidents: " , people.vp.count),
-                 text("vpcost", "Cost: $", people.vp.hire),
-			     hirefirerow("vp"))
-  + ln
-  + table("fellows", text("fcount", "Fellows: " , people.fellow.count),
-                     text("fcost", "Cost: $", people.fellow.hire),
-					 hirefirerow("fellow"))
-  + ln
-  + table("officers", text("ocount", "Officers: " , people.officer.count),
-                      text("ocost", "Cost: $", people.officer.hire),
-					  hirefirerow("officer"))
-  + ln
-  + table("board", text("bmcount", "Board Members: " , people.board.count),
-                   text("bmcost", "Cost: $", people.board.hire),
-				   hirefirerow("board"))
-  + "</div>"
   + ln
   + text("tcount", "Total Employees: " , people.total())
   + ln 
@@ -118,11 +98,16 @@ function init() {
   + text("ccount", "Campuses owned: " , places.campus.count)
   + button(null,"places.sell(places.campus)","Sell") 
   + ln 
-  + text("status","", status.get());
+  + text("status","", status.get())
+  + "</div></div></div></td></tr></table>";
+}
+
+function setbg(src) {
+  document.getElementById("body").style.background = "url('" + src + "')"
 }
 
 function refresh() {
-  document.getElementById("assets").innerHTML = money.dollars;
+  document.getElementById("moneys").innerHTML = "$" + money.dollars;
   document.getElementById("revenue").innerHTML = (people.earnings() - places.rent());
   document.getElementById("wcount").innerHTML = people.worker.count;
   document.getElementById("mcount").innerHTML = people.manager.count;
@@ -218,8 +203,9 @@ function people() {
 	}
   }
   
-  this.hiretype = function(name,hire,earn,fire,limiter,superior,space,sigma,subordinate) {
+  this.hiretype = function(name,shortname,hire,earn,fire,limiter,superior,space,sigma,subordinate,img) {
     this.name = name;
+	this.shortname = shortname;
     this.hire = hire;
 	this.earn = earn;
 	this.fire = fire;
@@ -229,19 +215,20 @@ function people() {
 	this.space = space;
 	this.sigma = sigma;
 	this.subordinate = subordinate;
+	this.img = img;
 	this.size = function() {
 	  return this.count * this.space;
 	}
   }
   
-  this.officer = new this.hiretype("Corporate Officer",32000,-3200,64000,null,null,10,4,this.vp);
-  this.board = new this.hiretype("Board Member",1920000,3200,64000,this.officer,null,10,null,null);
-  this.vp = new this.hiretype("Vice President",16000,-1600,32000,null,this.officer,5,4,this.director);
-  this.fellow = new this.hiretype("Fellow",960000,1600,32000,this.vp,null,5,null,null);
-  this.director = new this.hiretype("Director",8000,-800,16000,null,this.vp,5,4,this.middleman);
-  this.middleman = new this.hiretype("Middle Manager",4000,-400,8000,null,this.director,3,4,this.manager);
-  this.manager = new this.hiretype("Manager",2000,-200,4000,null,this.middleman,2,20,this.worker);
-  this.worker = new this.hiretype("Worker",1000,100,2000,null,this.manager,1,null,null);
+  this.officer = new this.hiretype("Chief Officer","o",32000,-3200,64000,null,null,10,4,this.vp,"officer.png");
+  this.board = new this.hiretype("Board Member","bm",1920000,3200,64000,this.officer,null,10,null,null,"board.png");
+  this.vp = new this.hiretype("Vice President","vp",16000,-1600,32000,null,this.officer,5,4,this.director,"vp.png");
+  this.fellow = new this.hiretype("Fellow","f",960000,1600,32000,this.vp,null,5,null,null,"fellow.png");
+  this.director = new this.hiretype("Director","d",8000,-800,16000,null,this.vp,5,4,this.middleman,"director.png");
+  this.middleman = new this.hiretype("Upper Mgmt.","mm",4000,-400,8000,null,this.director,3,4,this.manager,"middleman.png");
+  this.manager = new this.hiretype("Manager","m",2000,-200,4000,null,this.middleman,2,20,this.worker,"manager.png");
+  this.worker = new this.hiretype("Worker","w",1000,100,2000,null,this.manager,1,null,null,"worker.png");
 }
 
 function places() {
@@ -270,15 +257,20 @@ function places() {
 	  if (money.pay(this.building.cost)) {
 	    this.rented = this.none;
 		this.building.count += 1;
+		setbg(this.building.img);
 	  }
 	} else if (money.pay(this.upgradeto.rent)) {
 	  this.rented = this.upgradeto;
+	  setbg(this.upgradeto.img);
 	} 
   }
   
   this.buy = function(type) {
     if (money.pay(type.cost)) {
 	  type.count += 1;
+	  if (type == this.campus && type.count ==1) {
+	    setbg(type.img);
+	  }
 	} 
   }
   
@@ -291,32 +283,34 @@ function places() {
 	}
   }
   
-  this.renttype = function(name,size,rent) {
+  this.renttype = function(name,size,rent,img) {
     this.name = name;
     this.size = size;
     this.rent = rent;
+	this.img = img;
   }
   
-  this.none = new this.renttype("Nothing",0,0);
-  this.garage = new this.renttype("Your Garage",5,0);
-  this.loft = new this.renttype("A Grungy Loft",30,400);
-  this.suite = new this.renttype("A Cramped Office Suite",100,2000);
-  this.office = new this.renttype("A Modest Office",400,10000);
-  this.onestory = new this.renttype("One Floor of an Office Building",1000,30000);
-  this.twostory = new this.renttype("Two Floors of an Office Building",2000,60000);
-  this.threestory = new this.renttype("Three Floors of an Office Building",3000,90000);
-  this.fourstory = new this.renttype("Four Floors of an Office Building",4000,120000);
-  this.fivestory = new this.renttype("Five Floors of an Office Building",5000,150000);
+  this.none = new this.renttype("Nothing",0,0,null);
+  this.garage = new this.renttype("Your Garage",5,0,"garage.png");
+  this.loft = new this.renttype("A Grungy Loft",30,400,"loft.png");
+  this.suite = new this.renttype("A Cramped Office Suite",100,2000,"suite.png");
+  this.office = new this.renttype("A Modest Office",400,10000,"office.png");
+  this.onestory = new this.renttype("One Floor of an Office Building",1000,30000,"onestory.png");
+  this.twostory = new this.renttype("Two Floors of an Office Building",2000,60000,"twostory.png");
+  this.threestory = new this.renttype("Three Floors of an Office Building",3000,90000,"threestory.png");
+  this.fourstory = new this.renttype("Four Floors of an Office Building",4000,120000,"fourstory.png");
+  this.fivestory = new this.renttype("Five Floors of an Office Building",5000,150000,"fivestory.png");
   
-  this.owntype = function(size,cost,upkeep) {
+  this.owntype = function(size,cost,upkeep,img) {
     this.size = size;
     this.cost = cost;
     this.upkeep = upkeep;
 	this.count = 0;
+	this.img = img;
   }
   
-  this.building = new this.owntype(5000,81000000,15000);
-  this.campus = new this.owntype(25000,324000000,60000);
+  this.building = new this.owntype(5000,81000000,15000,"building.png");
+  this.campus = new this.owntype(25000,324000000,60000,"campus.png");
   
   this.rented = this.garage;
 }
