@@ -104,9 +104,32 @@ ins {
 
 #moneys {
   color: #5e1;
-  font-size: 80px;
+  font-size: 65px;
   text-align: center;
   text-shadow: 1px 1px 10px #000;
+}
+
+.coin {
+  text-align: center;
+}
+
+.coin img {
+  -webkit-filter: drop-shadow(0 0 3px #000);
+  margin: 15px;
+  width: 250px;
+  height: 250px;
+}
+
+.coin img:hover {
+  margin: 12px;
+  width: 256px;
+  height: 256px;
+}
+
+.coin img:active {
+  margin: 15px;
+  width: 250px;
+  height: 250px;
 }
 
 .interactive {

@@ -78,9 +78,8 @@ function init() {
   + person(people.board)
   + "</div><div id='interactive'>"
   + "<div id='moneys'>$" + money.dollars + "</div>"
+  + "<div class='coin'><img src='coin.png' onclick='money.earn(100);refresh()' /></div>"
   + "<div class='interactive'>"
-  + button(null,"money.earn(100)","Work hard") 
-  + ln
   + text("revenue", "Revenue: " , (people.earnings() - places.rent()))
   + ln
   + text("tcount", "Total Employees: " , people.total())
