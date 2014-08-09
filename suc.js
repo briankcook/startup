@@ -3,13 +3,15 @@ Copyright Brian Cook - © 2014 - All Rights Reserved
 
 TODO:
 custom hire/fire amounts
+"double", "halve" and "max" buttons
+cash per click based on company size
 IPOs (to clear the first building hurdle)
 better UI, displays costs, hidden elements
 Stock fluctuations affecting assets
 productivity multipliers (new office, contentment, vacation time, ...)
 "branch inward" with top-level staying top level, and promoting up subordinates as needed
-hire full trees (eg 1 director, 5 middlemanagement, 25 managers, 625 workers)
-auto-satisfy requisites (eg try to hire 1000 workers, hire additional 20 managers, 4 middlemen)
+hire full trees (eg 1 director, 4 middlemanagement, 16 managers, 320 workers)
+auto-satisfy requisites (eg try to hire 320 workers, hire additional 16 managers, 4 middlemen)
 departments (marketing, pr, hr, r&d, ...) (create departments one at a time as desired, hire/fire within)
 takeovers of competing companies (other companies grow organically, purchaseable)
 lobbying
@@ -26,108 +28,116 @@ function interval() {
   }
   money.earn(people.earnings());
   money.pay(places.rent(), true);
+  status.age();
   refresh();
 }
 
 // display
 var ln = "<br />";
 
-function button(action, label) {
-  return "<button onclick='" + action + ";refresh()'>" + label + "</button>";
+function button(type, action, label) {
+  return "<a href='javascript:" + action + ";refresh();' class='" + type + " button'>" + label + "</a>";
 }
 
-function text(contents) {
-  return "<span class='text'>" + contents + "</span>";
+function text(name, label, contents) {
+  return "<span class='text'>" + label + "<ins id='" + name + "'>" + contents + "</ins></span>";
+}
+
+function table(id,a,b,c) {
+  return "<div id='" + id + "' class='employee'><div class='left'>" + a + "</div><div class='right'>" + b + "</div>" + c + "</div>";
+}
+
+function hirefirerow(type) {
+  return "<div>"
+         + button("hire","people.hire(people." + type + ")","Hire 1")
+         + button("hire","people.hire(people." + type + ", 10)","Hire 10")  
+         + button("hire","people.hire(people." + type + ", 100)","Hire 100")
+         + button("hire","people.hire(people." + type + ", 1000)","Hire 1000")
+         + "</div><div>"
+         + button("fire","people.fire(people." + type + ")","Fire 1")
+         + button("fire","people.fire(people." + type + ", 10)","Fire 10")  
+         + button("fire","people.fire(people." + type + ", 100)","Fire 100")
+         + button("fire","people.fire(people." + type + ", 1000)","Fire 1000")
+		 + "</div>"
+}
+
+function init() {
+  document.getElementById("body").innerHTML = ""
+  + ln 
+  + button(null,"money.earn(100)","Work hard") 
+  + text("assets", "Assets: $" , money.dollars)
+  + ln
+  + text("revenue", "Revenue: " , (people.earnings() - places.rent()))
+  + ln
+  + "<div id='employees'>"
+  + table("workers", text("wcount", "Workers: " , people.worker.count),
+                     text("wcost", "Cost: $", people.worker.hire),
+					 hirefirerow("worker"))
+  + ln
+  + table("managers", text("mcount", "Managers: " , people.manager.count),
+                      text("mcost", "Cost: $", people.manager.hire),
+				   	  hirefirerow("manager"))
+  + ln
+  + table("middlemen", text("mmcount", "Middle Management: " , people.middleman.count),
+                       text("mmcost", "Cost: $", people.middleman.hire),
+					   hirefirerow("middleman"))
+  + ln
+  + table("directors", text("dcount", "Directors: " , people.director.count),
+                       text("dcost", "Cost: $", people.director.hire),
+					   hirefirerow("director"))
+  + ln
+  + table("vps", text("vpcount", "Vice Presidents: " , people.vp.count),
+                 text("vpcost", "Cost: $", people.vp.hire),
+			     hirefirerow("vp"))
+  + ln
+  + table("fellows", text("fcount", "Fellows: " , people.fellow.count),
+                     text("fcost", "Cost: $", people.fellow.hire),
+					 hirefirerow("fellow"))
+  + ln
+  + table("officers", text("ocount", "Officers: " , people.officer.count),
+                      text("ocost", "Cost: $", people.officer.hire),
+					  hirefirerow("officer"))
+  + ln
+  + table("board", text("bmcount", "Board Members: " , people.board.count),
+                   text("bmcost", "Cost: $", people.board.hire),
+				   hirefirerow("board"))
+  + "</div>"
+  + ln
+  + text("tcount", "Total Employees: " , people.total())
+  + ln 
+  + text("capcount", "Desks: " , places.capacity())
+  + ln 
+  + button(null,"places.upgrade()","Upgrade") 
+  + text("location", "Office Location: " , places.rented.name)
+  + ln 
+  + button(null,"places.buy(places.building)","Buy") 
+  + text("bcount", "Buildings owned: " , places.building.count)
+  + button(null,"places.sell(places.building)","Sell") 
+  + ln 
+  + button(null,"places.buy(places.campus)","Buy") 
+  + text("ccount", "Campuses owned: " , places.campus.count)
+  + button(null,"places.sell(places.campus)","Sell") 
+  + ln 
+  + text("status","", status.get());
 }
 
 function refresh() {
-  document.getElementById("body").innerHTML = ""
-  + ln 
-  + button("money.earn(100)","Work hard") 
-  + text("Assets: $" + money.dollars)
-  + ln
-  + text("Revenue: " + (people.earnings() - places.rent()))
-  + ln
-  + button("people.hire(people.worker)","Hire")
-  + button("people.hire(people.worker, 10)","Hire 10")  
-  + button("people.hire(people.worker, 100)","Hire 100")  
-  + text("Workers: " + people.worker.count)  
-  + button("people.fire(people.worker, 100)","Fire 100") 
-  + button("people.fire(people.worker, 10)","Fire 10") 
-  + button("people.fire(people.worker)","Fire") 
-  + ln
-  + button("people.hire(people.manager)","Hire")
-  + button("people.hire(people.manager, 10)","Hire 10")  
-  + button("people.hire(people.manager, 100)","Hire 100")  
-  + text("Managers: " + people.manager.count)  
-  + button("people.fire(people.manager, 100)","Fire 100") 
-  + button("people.fire(people.manager, 10)","Fire 10") 
-  + button("people.fire(people.manager)","Fire") 
-  + ln
-  + button("people.hire(people.middleman)","Hire")
-  + button("people.hire(people.middleman, 10)","Hire 10")  
-  + button("people.hire(people.middleman, 100)","Hire 100")  
-  + text("Middle Management: " + people.middleman.count)  
-  + button("people.fire(people.middleman, 100)","Fire 100") 
-  + button("people.fire(people.middleman, 10)","Fire 10") 
-  + button("people.fire(people.middleman)","Fire") 
-  + ln
-  + button("people.hire(people.director)","Hire")
-  + button("people.hire(people.director, 10)","Hire 10")  
-  + button("people.hire(people.director, 100)","Hire 100")  
-  + text("Directors: " + people.director.count)  
-  + button("people.fire(people.director, 100)","Fire 100") 
-  + button("people.fire(people.director, 10)","Fire 10") 
-  + button("people.fire(people.director)","Fire") 
-  + ln
-  + button("people.hire(people.vp)","Hire")
-  + button("people.hire(people.vp, 10)","Hire 10")  
-  + button("people.hire(people.vp, 100)","Hire 100")  
-  + text("Vice Presidents: " + people.vp.count)  
-  + button("people.fire(people.vp, 100)","Fire 100") 
-  + button("people.fire(people.vp, 10)","Fire 10") 
-  + button("people.fire(people.vp)","Fire") 
-  + ln
-  + button("people.hire(people.fellow)","Hire")
-  + button("people.hire(people.fellow, 10)","Hire 10")  
-  + button("people.hire(people.fellow, 100)","Hire 100")  
-  + text("Fellows: " + people.fellow.count)  
-  + button("people.fire(people.fellow, 100)","Fire 100") 
-  + button("people.fire(people.fellow, 10)","Fire 10") 
-  + button("people.fire(people.fellow)","Fire") 
-  + ln
-  + button("people.hire(people.officer)","Hire")
-  + button("people.hire(people.officer, 10)","Hire 10")  
-  + button("people.hire(people.officer, 100)","Hire 100")  
-  + text("Officers: " + people.officer.count)  
-  + button("people.fire(people.officer, 100)","Fire 100") 
-  + button("people.fire(people.officer, 10)","Fire 10") 
-  + button("people.fire(people.officer)","Fire") 
-  + ln
-  + button("people.hire(people.board)","Hire")
-  + button("people.hire(people.board, 10)","Hire 10")  
-  + button("people.hire(people.board, 100)","Hire 100")  
-  + text("Board Members: " + people.board.count)  
-  + button("people.fire(people.board, 100)","Fire 100") 
-  + button("people.fire(people.board, 10)","Fire 10") 
-  + button("people.fire(people.board)","Fire") 
-  + ln 
-  + text("Total Employees: " + people.total())
-  + ln 
-  + text("Desks: " + places.capacity())
-  + ln 
-  + button("places.upgrade()","Upgrade") 
-  + text("Office Location: " + places.rented.name)
-  + ln 
-  + button("places.buy(places.building)","Buy") 
-  + text("Buildings owned: " + places.building.count)
-  + button("places.sell(places.building)","Sell") 
-  + ln 
-  + button("places.buy(places.campus)","Buy") 
-  + text("Campuses owned: " + places.campus.count)
-  + button("places.sell(places.campus)","Sell") 
-  + ln 
-  + status;
+  document.getElementById("assets").innerHTML = money.dollars;
+  document.getElementById("revenue").innerHTML = (people.earnings() - places.rent());
+  document.getElementById("wcount").innerHTML = people.worker.count;
+  document.getElementById("mcount").innerHTML = people.manager.count;
+  document.getElementById("mmcount").innerHTML = people.middleman.count;
+  document.getElementById("dcount").innerHTML = people.director.count;
+  document.getElementById("vpcount").innerHTML = people.vp.count;
+  document.getElementById("fcount").innerHTML = people.fellow.count;
+  document.getElementById("ocount").innerHTML = people.officer.count ;
+  document.getElementById("bmcount").innerHTML = people.board.count;
+  document.getElementById("tcount").innerHTML = people.total();
+  document.getElementById("capcount").innerHTML = places.capacity();
+  document.getElementById("location").innerHTML = places.rented.name;
+  document.getElementById("bcount").innerHTML = places.building.count;
+  document.getElementById("ccount").innerHTML = places.campus.count;
+  document.getElementById("status").innerHTML = status.get();
 }
 
 // Control Blocks
@@ -135,7 +145,7 @@ function refresh() {
 var money = new money();
 var people = new people();
 var places = new places();
-var status = "Welcome to Startup";
+var status = new status();
 
 function money() {
   this.dollars = 0;
@@ -145,7 +155,7 @@ function money() {
       this.dollars -= amount;
 	  return true;
     } else {
-        status = "You do not have the $" + amount + " required.";
+        status.set("You do not have the $" + amount + " required.");
       return false;
     }
   }
@@ -183,10 +193,10 @@ function people() {
 	      type.count += count;
   	    }
 	  } else { 
-	    status = "Your office is too small to hire this person.";
+	    status.set("Your office is too small to hire this person.");
 	  }
     } else {
-      status = "You do not have enough oversight to hire this person.";
+      status.set("You do not have enough oversight to hire this person.");
     }
   }
   
@@ -201,10 +211,10 @@ function people() {
 	      type.count -= count;
 	    }
 	  } else {
-	    status = "You can't fire employees you need.";
+	    status.set("You can't fire employees you need.");
 	  }
 	} else {
-	  status = "Nice try, but you can't fire people who don't work for you.";
+	  status.set("Nice try, but you can't fire people who don't work for you.");
 	}
   }
   
@@ -224,13 +234,13 @@ function people() {
 	}
   }
   
-  this.officer = new this.hiretype("Corporate Officer",32000,-3200,64000,null,null,10,5,this.vp);
+  this.officer = new this.hiretype("Corporate Officer",32000,-3200,64000,null,null,10,4,this.vp);
   this.board = new this.hiretype("Board Member",1920000,3200,64000,this.officer,null,10,null,null);
-  this.vp = new this.hiretype("Vice President",16000,-1600,32000,null,this.officer,5,5,this.director);
+  this.vp = new this.hiretype("Vice President",16000,-1600,32000,null,this.officer,5,4,this.director);
   this.fellow = new this.hiretype("Fellow",960000,1600,32000,this.vp,null,5,null,null);
-  this.director = new this.hiretype("Director",8000,-800,16000,null,this.vp,5,5,this.middleman);
-  this.middleman = new this.hiretype("Middle Manager",4000,-400,8000,null,this.director,3,5,this.manager);
-  this.manager = new this.hiretype("Manager",2000,-200,4000,null,this.middleman,2,25,this.worker);
+  this.director = new this.hiretype("Director",8000,-800,16000,null,this.vp,5,4,this.middleman);
+  this.middleman = new this.hiretype("Middle Manager",4000,-400,8000,null,this.director,3,4,this.manager);
+  this.manager = new this.hiretype("Manager",2000,-200,4000,null,this.middleman,2,20,this.worker);
   this.worker = new this.hiretype("Worker",1000,100,2000,null,this.manager,1,null,null);
 }
 
@@ -277,7 +287,7 @@ function places() {
 	  money.earn(type.cost/2);
 	  type.count--;
 	} else {
-	  status = "You need this space.  Consider firing some workers.";
+	  status .set("You need this space.  Consider firing some workers.");
 	}
   }
   
@@ -308,5 +318,29 @@ function places() {
   this.building = new this.owntype(5000,81000000,15000);
   this.campus = new this.owntype(25000,324000000,60000);
   
-  this.rented = this.garage
+  this.rented = this.garage;
+}
+
+function status() {
+  this.message = "Welcome to Startup";
+  this.count = 0;
+  
+  this.set = function(s) {
+    this.count = 0;
+	this.message = s;
+  }
+  
+  this.get = function(fromClick) {
+    if (fromClick) {
+	  this.set("");
+	}
+    return this.message;
+  }
+  
+  this.age = function() {
+    if (this.count++ > 3) {
+	  this.count = 0;
+	  this.message = "";
+	}
+  }
 }
