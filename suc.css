@@ -21,8 +21,16 @@ ins {
   border-radius: 15px;
   margin: auto;
   font-family: "DPComic";
+  font-size: 18px;
   position: relative;
   color: #fff;
+}
+
+.box {
+  background-color: rgba(0,0,0,0.8);
+  border: 2px #555 solid;
+  border-radius: 10px;
+  box-shadow: 1px 1px 5px #000;
 }
 
 .button {
@@ -32,6 +40,11 @@ ins {
   border-radius: 5px;
   text-decoration: none;
   color: #fff;
+}
+
+.button:hover {
+  background-color: #555;
+  color: #f55
 }
 
 .text {
@@ -44,16 +57,16 @@ ins {
 }
 
 .employee {
-  background-color: rgba(0,0,0,0.8);
-  border: 2px #555 solid;
-  border-radius: 10px;
   position: relative;
   display: inline-block;
   width: 388px;
   height: 50px;
   margin-top: 5px;
   margin-left: 5px;
-  box-shadow: 1px 1px 5px #000;
+}
+
+.employee:hover {
+  height: 94px;
 }
 
 .portrait {
@@ -82,14 +95,33 @@ ins {
   position: absolute;
   top: 30px;
   left: 58px;
-  font-size: 18px;
 }
 
-.hire {
+div.hire {
+  margin-top: 52px;
+  margin-left: 54px;
+  display: none;
+}
+
+.employee:hover div.hire {
+  display: block;
+}
+
+div.fire {
+  margin-top: 2px;
+  margin-left: 54px;
+  display: none;
+}
+
+.employee:hover div.fire {
+  display: block;
+}
+
+a.hire {
   background-color: #77f;
 }
 
-.fire {
+a.fire {
   background-color: #f77;
 }
 
@@ -102,7 +134,12 @@ ins {
   margin-right: 5px;
 }
 
+.placename {
+  
+}
+
 #moneys {
+  margin-top: 10px;
   color: #5e1;
   font-size: 65px;
   text-align: center;
@@ -114,7 +151,7 @@ ins {
 }
 
 .coin img {
-  -webkit-filter: drop-shadow(0 0 3px #000);
+  -webkit-filter: drop-shadow(0 0 3px #000) drop-shadow(0 0 10px #000) drop-shadow(0 0 10px rgba(0,0,0,0.3));
   margin: 15px;
   width: 250px;
   height: 250px;
@@ -132,9 +169,57 @@ ins {
   height: 250px;
 }
 
-.interactive {
-  background-color: rgba(0,0,0,0.8);
-  border: 2px #555 solid;
-  border-radius: 10px;
-  box-shadow: 1px 1px 5px #000;
+#loc {
+  position: relative;
+  height: 70px;
+  text-align: center;
+}
+
+#locname {
+  margin-top:6px;
+  font-size: 20px;
+}
+
+#buildings {
+  font-size: 20px;
+  position: absolute;
+  top: 6px;
+  left: 5px;
+  display: none;
+}
+
+#campuses {
+  font-size: 20px;
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  display: none;
+}
+
+.income {
+  position: absolute;
+  top: 30px;
+  left: 5px;
+}
+
+#revenue {
+  color: #5e1;
+}
+
+.rent {
+  position: absolute;
+  top: 30px;
+  right: 5px;
+}
+
+.cap {
+  position: absolute;
+  top: 50px;
+  left: 5px;
+}
+
+#upgrade {
+  position: absolute;
+  top: 50px;
+  right: 5px;
 }

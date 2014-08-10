@@ -5,8 +5,10 @@ TODO:
 custom hire/fire amounts
 "double", "halve" and "max" buttons
 cash per click based on company size
+track date, update less frequently, 
 IPOs (to clear the first building hurdle)
-better UI, displays costs, hidden elements
+hide employee types not yet needed
+figure out where to put status messages
 Stock fluctuations affecting assets
 productivity multipliers (new office, contentment, vacation time, ...)
 "branch inward" with top-level staying top level, and promoting up subordinates as needed
@@ -28,100 +30,8 @@ function interval() {
   }
   money.earn(people.earnings());
   money.pay(places.rent(), true);
-  status.age();
-  refresh();
-}
-
-// display
-var ln = "<br />";
-
-function person(type) {
-  return "<div id='" + type.name + "' class='employee'>"
-         + "<img src='" + type.img + "' class='portrait' />"
-         + "<div class='name'>" + type.name + "</div>"
-         + "<div class='cost'>Cost: " + type.hire + "</div>"
-		 + "<div id='" + type.shortname + "count'class='count'>" + type.count + "</div></div>";
-}
-
-function button(type, action, label) {
-  return "<a href='javascript:" + action + ";refresh();' class='" + type + " button'>" + label + "</a>";
-}
-
-function text(name, label, contents) {
-  return "<span class='text'>" + label + "<ins id='" + name + "'>" + contents + "</ins></span>";
-}
-
-function hirefirerow(type) {
-  return "<div>"
-         + button("hire","people.hire(people." + type + ")","Hire 1")
-         + button("hire","people.hire(people." + type + ", 10)","Hire 10")  
-         + button("hire","people.hire(people." + type + ", 100)","Hire 100")
-         + button("hire","people.hire(people." + type + ", 1000)","Hire 1000")
-         + "</div><div>"
-         + button("fire","people.fire(people." + type + ")","Fire 1")
-         + button("fire","people.fire(people." + type + ", 10)","Fire 10")  
-         + button("fire","people.fire(people." + type + ", 100)","Fire 100")
-         + button("fire","people.fire(people." + type + ", 1000)","Fire 1000")
-		 + "</div>"
-}
-
-function init() {
-  document.getElementById("top").innerHTML = "<table width='100%' height='100%'><tr><td valign='middle'><div id='body'>"
-  + "<div id='employees'>"
-  + person(people.worker)
-  + person(people.manager)
-  + person(people.middleman)
-  + person(people.director)
-  + person(people.vp)
-  + person(people.fellow)
-  + person(people.officer)
-  + person(people.board)
-  + "</div><div id='interactive'>"
-  + "<div id='moneys'>$" + money.dollars + "</div>"
-  + "<div class='coin'><img src='coin.png' onclick='money.earn(100);refresh()' /></div>"
-  + "<div class='interactive'>"
-  + text("revenue", "Revenue: " , (people.earnings() - places.rent()))
-  + ln
-  + text("tcount", "Total Employees: " , people.total())
-  + ln 
-  + text("capcount", "Desks: " , places.capacity())
-  + ln 
-  + button(null,"places.upgrade()","Upgrade") 
-  + text("location", "Office Location: " , places.rented.name)
-  + ln 
-  + button(null,"places.buy(places.building)","Buy") 
-  + text("bcount", "Buildings owned: " , places.building.count)
-  + button(null,"places.sell(places.building)","Sell") 
-  + ln 
-  + button(null,"places.buy(places.campus)","Buy") 
-  + text("ccount", "Campuses owned: " , places.campus.count)
-  + button(null,"places.sell(places.campus)","Sell") 
-  + ln 
-  + text("status","", status.get())
-  + "</div></div></div></td></tr></table>";
-}
-
-function setbg(src) {
-  document.getElementById("body").style.background = "url('" + src + "')"
-}
-
-function refresh() {
-  document.getElementById("moneys").innerHTML = "$" + money.dollars;
-  document.getElementById("revenue").innerHTML = (people.earnings() - places.rent());
-  document.getElementById("wcount").innerHTML = people.worker.count;
-  document.getElementById("mcount").innerHTML = people.manager.count;
-  document.getElementById("mmcount").innerHTML = people.middleman.count;
-  document.getElementById("dcount").innerHTML = people.director.count;
-  document.getElementById("vpcount").innerHTML = people.vp.count;
-  document.getElementById("fcount").innerHTML = people.fellow.count;
-  document.getElementById("ocount").innerHTML = people.officer.count ;
-  document.getElementById("bmcount").innerHTML = people.board.count;
-  document.getElementById("tcount").innerHTML = people.total();
-  document.getElementById("capcount").innerHTML = places.capacity();
-  document.getElementById("location").innerHTML = places.rented.name;
-  document.getElementById("bcount").innerHTML = places.building.count;
-  document.getElementById("ccount").innerHTML = places.campus.count;
-  document.getElementById("status").innerHTML = status.get();
+  display.status.age();
+  display.refresh();
 }
 
 // Control Blocks
@@ -129,7 +39,128 @@ function refresh() {
 var money = new money();
 var people = new people();
 var places = new places();
-var status = new status();
+var display = new display();
+
+// display
+function display() {
+  this.person = function(type) {
+    return "<div id='" + type.name + "' class='employee box'>"
+           + "<img src='" + type.img + "' class='portrait' />"
+           + "<div class='name'>" + type.name + "</div>"
+           + "<div class='cost'>Cost: " + type.hire + "</div>"
+           + "<div id='" + type.shortname + "count'class='count'>" + type.count + "</div>"
+           + this.hirefire(type.iname) + "</div>";
+  }
+
+  this.button = function(type, action, label) {
+    return "<a href='javascript:" + action + ";display.refresh();' class='" + type + " button'>" + label + "</a>";
+  }
+
+  this.text = function(name, label, contents) {
+    return "<span class='text'>" + label + "<ins id='" + name + "'>" + contents + "</ins></span>";
+  }
+
+  this.hirefire = function(type) {
+    return "<div class='hire'>"
+           + this.button("hire","people.hire(people." + type + ")","Hire 1")
+           + this.button("hire","people.hire(people." + type + ", 10)","Hire 10")  
+           + this.button("hire","people.hire(people." + type + ", 100)","Hire 100")
+           + this.button("hire","people.hire(people." + type + ", 1000)","Hire 1000")
+           + "</div><div class='fire'>"
+           + this.button("fire","people.fire(people." + type + ")","Fire 1")
+           + this.button("fire","people.fire(people." + type + ", 10)","Fire 10")  
+           + this.button("fire","people.fire(people." + type + ", 100)","Fire 100")
+           + this.button("fire","people.fire(people." + type + ", 1000)","Fire 1000")
+           + "</div>"
+  }
+
+  this.init = function() {
+    document.getElementById("top").innerHTML = "<table width='100%' height='100%'><tr><td valign='middle'><div id='body'>"
+    + "<div id='employees'>"
+    + this.person(people.worker)
+    + this.person(people.manager)
+    + this.person(people.middleman)
+    + this.person(people.director)
+    + this.person(people.vp)
+    + this.person(people.fellow)
+    + this.person(people.officer)
+    + this.person(people.board)
+    + "</div><div id='interactive'><div id='loc' class='box'>"
+    + "<div id='locname'>Office Location: <span id='location'>Your Garage</span></div>"
+    + "<div id='buildings'>Buildings: <span id='bcount'>0</span>"
+    + this.button(null,"places.buy(places.building)","Buy") 
+    + this.button(null,"places.sell(places.building)","Sell")
+    + "</div><div id='campuses'>Campuses: <span id='ccount'>0</span>"
+    + this.button(null,"places.buy(places.campus)","Buy") 
+    + this.button(null,"places.sell(places.campus)","Sell") 
+    + "</div><div class='cap'>Capacity: <span id='capcount'>0 / 5</span></div>"
+    + "<div class='rent'>Rent: $<span id='rentamt'>0</span></div>"
+    + "<div class='income'>Revenue: $<span id='revenue'>0</span></div>"
+    + "<div id='upgrade'>" + this.button(null,"places.upgrade()","Upgrade") + "Cost: $<span id='upgradeamt'>400</span></div></div>"
+    + "<div id='moneys'>$" + money.dollars + "</div>"
+    + "<div class='coin'><img src='coin.png' onclick='money.earn(100);refresh()' /></div>"
+    + "<div class='interactive box'>"
+    + this.text("status","", this.status.get())
+    + "</div></div></div></td></tr></table>";
+  }
+
+  this.setbg = function(src) {
+    document.getElementById("body").style.background = "url('" + src + "')";
+  }
+  
+  this.locswitch = function() {
+    document.getElementById("locname").style.display = "none";
+    document.getElementById("buildings").style.display = "block";
+    document.getElementById("campuses").style.display = "block";
+    document.getElementById("upgrade").innerHTML = "Cost: $<span id='upgradeamt'>81,000,000</span>";
+  }
+
+  this.refresh = function() {
+    document.getElementById("moneys").innerHTML = "$" + money.dollars.toLocaleString();
+    document.getElementById("revenue").innerHTML = (people.earnings() - places.rent()).toLocaleString();
+    document.getElementById("wcount").innerHTML = people.worker.count.toLocaleString();
+    document.getElementById("mcount").innerHTML = people.manager.count.toLocaleString();
+    document.getElementById("mmcount").innerHTML = people.middleman.count.toLocaleString();
+    document.getElementById("dcount").innerHTML = people.director.count.toLocaleString();
+    document.getElementById("vpcount").innerHTML = people.vp.count.toLocaleString();
+    document.getElementById("fcount").innerHTML = people.fellow.count.toLocaleString();
+    document.getElementById("ocount").innerHTML = people.officer.count.toLocaleString();
+    document.getElementById("bmcount").innerHTML = people.board.count.toLocaleString();
+    document.getElementById("capcount").innerHTML = people.total().toLocaleString() + " / " + places.capacity().toLocaleString();
+    document.getElementById("location").innerHTML = places.rented.name;
+    document.getElementById("rentamt").innerHTML = places.rent().toLocaleString();
+    document.getElementById("upgradeamt").innerHTML = places.upgrade(true).toLocaleString();
+    document.getElementById("bcount").innerHTML = places.building.count.toLocaleString();
+    document.getElementById("ccount").innerHTML = places.campus.count.toLocaleString();
+    document.getElementById("status").innerHTML = display.status.get();
+  }
+
+  this.status = function() {
+    this.message = "Welcome to Startup";
+    this.count = 0;
+    
+    this.set = function(s) {
+      this.count = 0;
+      this.message = s;
+    }
+    
+    this.get = function(fromClick) {
+      if (fromClick) {
+        this.set("");
+      }
+      return this.message;
+    }
+    
+    this.age = function() {
+      if (this.count++ > 3) {
+        this.count = 0;
+        this.message = "";
+      }
+    }
+  }
+  
+  this.status = new this.status();
+}
 
 function money() {
   this.dollars = 0;
@@ -137,9 +168,9 @@ function money() {
   this.pay = function(amount, force) {
     if (force || this.dollars >= amount) {
       this.dollars -= amount;
-	  return true;
+	    return true;
     } else {
-        status.set("You do not have the $" + amount + " required.");
+      display.status.set("You do not have the $" + amount + " required.");
       return false;
     }
   }
@@ -164,7 +195,7 @@ function people() {
 	       + this.vp.count * this.vp.earn
 	       + this.board.count * this.board.earn
 	       + this.officer.count * this.officer.earn;
-	return retval;
+	  return retval;
   }
   
   this.hire = function(type, count) {
@@ -173,61 +204,62 @@ function people() {
     || ((type == this.fellow || type == this.board ) && type.count + count <= type.limiter.count)
     || (type.count + count <= Math.max(type.superior.count, 1) * type.superior.sigma)) {
       if (people.total() + count * type.space <= places.capacity()) {
-	    if (money.pay(type.hire * count)) {
-	      type.count += count;
+	      if (money.pay(type.hire * count)) {
+	        type.count += count;
   	    }
-	  } else { 
-	    status.set("Your office is too small to hire this person.");
-	  }
+	    } else { 
+	      display.status.set("Your office is too small to hire this person.");
+	    }
     } else {
-      status.set("You do not have enough oversight to hire this person.");
+      display.status.set("You do not have enough oversight to hire this person.");
     }
   }
   
   this.fire = function(type, count) {
     count = count || 1;
     if (type.count - count >= 0) {
-	  if (((type != this.officer && type != this.vp) 
-	   || (type == this.officer && type.count - count >= this.board.count) 
-	   || (type == this.vp && type.count - count >= this.fellow.count))
-	  && (type.subordinate == null || (type.count - count) * type.sigma >= type.subordinate.count)) {
+	    if (type == this.officer && type.count - count >= this.board.count
+	    || type == this.vp && type.count - count >= this.fellow.count
+	    || type.subordinate == null
+	    || (type.count - count) * type.sigma >= type.subordinate.count) {
         if (money.pay(type.fire * count)) {
-	      type.count -= count;
+	        type.count -= count;
+	      }
+	    } else {
+	      display.status.set("You can't fire employees you need.");
 	    }
 	  } else {
-	    status.set("You can't fire employees you need.");
+	    display.status.set("Nice try, but you can't fire people who don't work for you.");
 	  }
-	} else {
-	  status.set("Nice try, but you can't fire people who don't work for you.");
-	}
   }
   
-  this.hiretype = function(name,shortname,hire,earn,fire,limiter,superior,space,sigma,subordinate,img) {
+  this.hiretype = function(name,iname,shortname,hire,earn,fire,limiter,superior,space,sigma,subordinate,img) {
     this.name = name;
-	this.shortname = shortname;
+	  this.iname = iname;
+	  this.shortname = shortname;
     this.hire = hire;
-	this.earn = earn;
-	this.fire = fire;
-	this.count = 0;
-	this.limiter = limiter;
-	this.superior = superior;
-	this.space = space;
-	this.sigma = sigma;
-	this.subordinate = subordinate;
-	this.img = img;
-	this.size = function() {
-	  return this.count * this.space;
-	}
+	  this.earn = earn;
+	  this.fire = fire;
+	  this.count = 0;
+	  this.limiter = limiter;
+	  this.superior = superior;
+	  this.space = space;
+	  this.sigma = sigma;
+	  this.subordinate = subordinate;
+	  this.img = img;
+	  this.size = function() {
+	    return this.count * this.space;
+	  }
   }
   
-  this.officer = new this.hiretype("Chief Officer","o",32000,-3200,64000,null,null,10,4,this.vp,"officer.png");
-  this.board = new this.hiretype("Board Member","bm",1920000,3200,64000,this.officer,null,10,null,null,"board.png");
-  this.vp = new this.hiretype("Vice President","vp",16000,-1600,32000,null,this.officer,5,4,this.director,"vp.png");
-  this.fellow = new this.hiretype("Fellow","f",960000,1600,32000,this.vp,null,5,null,null,"fellow.png");
-  this.director = new this.hiretype("Director","d",8000,-800,16000,null,this.vp,5,4,this.middleman,"director.png");
-  this.middleman = new this.hiretype("Upper Mgmt.","mm",4000,-400,8000,null,this.director,3,4,this.manager,"middleman.png");
-  this.manager = new this.hiretype("Manager","m",2000,-200,4000,null,this.middleman,2,20,this.worker,"manager.png");
-  this.worker = new this.hiretype("Worker","w",1000,100,2000,null,this.manager,1,null,null,"worker.png");
+  this.officer = new this.hiretype("Chief Officer","officer","o",32000,-3200,64000,null,null,10,4,this.vp,"officer.png");
+  this.board = new this.hiretype("Board Member","board","bm",1920000,3200,64000,this.officer,null,10,null,null,"board.png");
+  this.vp = new this.hiretype("Vice President","vp","vp",16000,-1600,32000,null,this.officer,5,4,this.director,"vp.png");
+  this.fellow = new this.hiretype("Fellow","fellow","f",960000,1600,32000,this.vp,null,5,null,null,"fellow.png");
+  this.director = new this.hiretype("Director","director","d",8000,-800,16000,null,this.vp,5,4,this.middleman,"director.png");
+  this.middleman = new this.hiretype("Upper Mgmt.","middleman","mm",4000,-400,8000,null,this.director,3,4,this.manager,"middleman.png");
+  this.manager = new this.hiretype("Manager","manager","m",2000,-200,4000,null,this.middleman,2,20,this.worker,"manager.png");
+  this.worker = new this.hiretype("Worker","worker","w",1000,100,2000,null,this.manager,1,null,null,"worker.png");
 }
 
 function places() {
@@ -239,54 +271,63 @@ function places() {
     return this.rented.rent + this.building.count * this.building.upkeep + this.campus.count * this.campus.upkeep;
   }
   
-  this.upgrade = function() {
+  this.upgrade = function(getcost) {
     var upgradeto;
     switch (this.rented) {
-	  case this.garage: this.upgradeto = this.loft; break;
-	  case this.loft: this.upgradeto = this.suite; break;
-	  case this.suite: this.upgradeto = this.office; break;
-	  case this.office: this.upgradeto = this.onestory; break;
-	  case this.onestory: this.upgradeto = this.twostory; break;
-	  case this.twostory: this.upgradeto = this.threestory; break;
-	  case this.threestory: this.upgradeto = this.fourstory; break;
-	  case this.fourstory: this.upgradeto = this.fivestory; break;
-	  case this.fivestory: this.upgradeto = this.none; break;
-	}
-	if (this.upgradeto == this.none) {
-	  if (money.pay(this.building.cost)) {
-	    this.rented = this.none;
-		this.building.count += 1;
-		setbg(this.building.img);
+	    case this.garage: this.upgradeto = this.loft; break;
+	    case this.loft: this.upgradeto = this.suite; break;
+	    case this.suite: this.upgradeto = this.office; break;
+	    case this.office: this.upgradeto = this.onestory; break;
+	    case this.onestory: this.upgradeto = this.twostory; break;
+	    case this.twostory: this.upgradeto = this.threestory; break;
+	    case this.threestory: this.upgradeto = this.fourstory; break;
+	    case this.fourstory: this.upgradeto = this.fivestory; break;
+	    case this.fivestory: this.upgradeto = this.none; break;
 	  }
-	} else if (money.pay(this.upgradeto.rent)) {
-	  this.rented = this.upgradeto;
-	  setbg(this.upgradeto.img);
-	} 
+	  if (getcost) {
+	    if (this.upgradeto == this.none) {
+	      return this.building.cost;
+	    } 
+	    else {
+	      return this.upgradeto.rent;
+	    }
+	  } 
+	  else if (this.upgradeto == this.none) {
+	    if (money.pay(this.building.cost)) {
+	      this.rented = this.none;
+		  this.building.count += 1;
+	  	display.setbg(this.building.img);
+	  	display.locswitch();
+	    }
+	  } else if (money.pay(this.upgradeto.rent)) {
+	    this.rented = this.upgradeto;
+	    display.setbg(this.upgradeto.img);
+	  } 
   }
   
   this.buy = function(type) {
     if (money.pay(type.cost)) {
-	  type.count += 1;
-	  if (type == this.campus && type.count ==1) {
-	    setbg(type.img);
-	  }
-	} 
+	    type.count += 1;
+	    if (type == this.campus && type.count ==1) {
+	      display.setbg(type.img);
+	    }
+	  } 
   }
   
   this.sell = function(type) {
     if (places.capacity() - type.size >= people.total()) {
-	  money.earn(type.cost/2);
-	  type.count--;
-	} else {
-	  status .set("You need this space.  Consider firing some workers.");
-	}
+	    money.earn(type.cost/2);
+	    type.count--;
+	  } else {
+	    display.status.set("You need this space.  Consider firing some workers.");
+	  }
   }
   
   this.renttype = function(name,size,rent,img) {
     this.name = name;
     this.size = size;
     this.rent = rent;
-	this.img = img;
+	  this.img = img;
   }
   
   this.none = new this.renttype("Nothing",0,0,null);
@@ -304,36 +345,12 @@ function places() {
     this.size = size;
     this.cost = cost;
     this.upkeep = upkeep;
-	this.count = 0;
-	this.img = img;
+	  this.count = 0;
+	  this.img = img;
   }
   
   this.building = new this.owntype(5000,81000000,15000,"building.png");
   this.campus = new this.owntype(25000,324000000,60000,"campus.png");
   
   this.rented = this.garage;
-}
-
-function status() {
-  this.message = "Welcome to Startup";
-  this.count = 0;
-  
-  this.set = function(s) {
-    this.count = 0;
-	this.message = s;
-  }
-  
-  this.get = function(fromClick) {
-    if (fromClick) {
-	  this.set("");
-	}
-    return this.message;
-  }
-  
-  this.age = function() {
-    if (this.count++ > 3) {
-	  this.count = 0;
-	  this.message = "";
-	}
-  }
 }
