@@ -20,7 +20,6 @@ TODO:
 ====lobbying
 ====upgrades (infrastructure, patents.. late game speed is appropriate, but early game would be slow)
 --GUI:
-====figure out where to put status messages
 ====cash and revenue colors for pos/neg
 */
 
