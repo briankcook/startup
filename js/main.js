@@ -11,8 +11,6 @@ TODO:
 ====hide employee types not yet needed
 ====warnings for actions which will put you in the negative
 --FEATURES:
-====IPOs (to clear the first building hurdle)
-====Stock fluctuations affecting board contentment
 ====productivity multipliers (new office, contentment, vacation time, ...)
 ===="branch inward" with top-level staying top level, and promoting up subordinates as needed
 ====departments (marketing, pr, hr, r&d, ...) (create departments one at a time as desired, hire/fire within)
@@ -21,6 +19,14 @@ TODO:
 ====upgrades (infrastructure, patents.. late game speed is appropriate, but early game would be slow)
 --GUI:
 ====cash and revenue colors for pos/neg
+
+--STOCK:
+step one: valuation.  determines how much revenue IPO will bring in
+step two: IPO.  2-25% of company is sold for 50% of valuation.
+step three: trading.  instead of valuation, stock price is shown.  elements of randomness
+step four: sell-offs.  sell fractions of the company for additional capital
+step five: stock splitting
+step maybe: board of trustees controlling how company is run
 */
 
 // main loop
@@ -219,7 +225,7 @@ function people() {
   
   this.hire = function(type, count) {
     count = count || 1;
-    if (type.superior && type.count + count > type.superior.count * type.superior.sigma) {
+    if (type.superior && type.count + count > Math.max(1,type.superior.count) * type.superior.sigma) {
       display.status.set("You do not have enough oversight to hire this person.");
       return false;
     }
@@ -259,7 +265,40 @@ function people() {
 	  }
   }
   
-  this.hiretype = function(name,iname,shortname,hire,earn,fire,limiter,superior,space,sigma,subordinate,img) {
+  this.autohire = function(count) {
+    nmanager = 0;
+    nmiddleman = 0;
+    ndirector = 0;
+    nvp = 0;
+    nofficer = 0;
+    needmore = function(sub, nsub, sup, nsup) {
+      return sub.count + nsub > Math.max(1,sup.count + nsup) * sup.sigma;
+    }
+    while (needmore(people.worker, count, people.manager, nmanager)) { nmanager++ }
+    while (needmore(people.manager, nmanager, people.middleman, nmiddleman)) { nmiddleman++ }
+    while (needmore(people.middleman, nmiddleman, people.director, ndirector)) { ndirector++ }
+    while (needmore(people.director, ndirector, people.vp, nvp)) { nvp++ }
+    while (needmore(people.vp, nvp, people.officer, nofficer)) { nofficer++ }
+    if (count * people.worker.space + nmanager * people.manager.space
+        + nmiddleman * people.middleman.space + ndirector * people.director.space
+        + nvp * people.vp.space + nofficer * people.officer.space
+        + people.total() > places.capacity()) {
+      display.status.set("You don't have enough space for that many.");
+      return false;
+    }
+    if (money.pay(count * people.worker.hire + nmanager * people.manager.hire
+                  + nmiddleman * people.middleman.hire + ndirector * people.director.hire
+                  + nvp * people.vp.hire + nofficer * people.officer.hire)) {
+      people.worker.count += count;
+      people.manager.count += nmanager;
+      people.middleman.count += nmiddleman;
+      people.director.count += ndirector;
+      people.vp.count += nvp;
+      people.officer.count += nofficer;
+    }
+  }
+  
+  this.hiretype = function(name,iname,shortname,hire,earn,fire,limiter,superior,space,sigma,img) {
     this.name = name;
 	  this.iname = iname;
 	  this.shortname = shortname;
@@ -271,21 +310,26 @@ function people() {
 	  this.superior = superior;
 	  this.space = space;
 	  this.sigma = sigma;
-	  this.subordinate = subordinate;
 	  this.img = img;
 	  this.size = function() {
 	    return this.count * this.space;
 	  }
   }
   
-  this.officer = new this.hiretype("Chief Officer","officer","o",32000,-3200,64000,null,null,10,4,this.vp,"officer.png");
-  this.board = new this.hiretype("Board Member","board","bm",1920000,32000,64000,this.officer,null,10,null,null,"board.png");
-  this.vp = new this.hiretype("Vice President","vp","vp",16000,-1600,32000,null,this.officer,5,4,this.director,"vp.png");
-  this.fellow = new this.hiretype("Fellow","fellow","f",960000,16000,32000,this.vp,null,5,null,null,"fellow.png");
-  this.director = new this.hiretype("Director","director","d",8000,-800,16000,null,this.vp,5,4,this.middleman,"director.png");
-  this.middleman = new this.hiretype("Upper Mgmt.","middleman","mm",4000,-400,8000,null,this.director,3,4,this.manager,"middleman.png");
-  this.manager = new this.hiretype("Manager","manager","m",2000,-200,4000,null,this.middleman,2,20,this.worker,"manager.png");
-  this.worker = new this.hiretype("Worker","worker","w",1000,100,2000,null,this.manager,1,null,null,"worker.png");
+  this.officer = new this.hiretype("Chief Officer","officer","o",32000,-3200,64000,null,null,10,4,"officer.png");
+  this.board = new this.hiretype("Board Member","board","bm",1920000,32000,64000,this.officer,null,10,null,"board.png");
+  this.vp = new this.hiretype("Vice President","vp","vp",16000,-1600,32000,null,this.officer,5,4,"vp.png");
+  this.fellow = new this.hiretype("Fellow","fellow","f",960000,16000,32000,this.vp,null,5,null,"fellow.png");
+  this.director = new this.hiretype("Director","director","d",8000,-800,16000,null,this.vp,5,4,"director.png");
+  this.middleman = new this.hiretype("Upper Mgmt.","middleman","mm",4000,-400,8000,null,this.director,3,4,"middleman.png");
+  this.manager = new this.hiretype("Manager","manager","m",2000,-200,4000,null,this.middleman,2,20,"manager.png");
+  this.worker = new this.hiretype("Worker","worker","w",1000,100,2000,null,this.manager,1,null,"worker.png");
+  
+  this.officer.subordinate = this.vp;
+  this.vp.subordinate = this.director;
+  this.director.subordinate = this.middleman;
+  this.middleman.subordinate = this.manager;
+  this.manager.subordinate = this.worker;
 }
 
 function places() {
