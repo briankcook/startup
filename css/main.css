@@ -54,15 +54,11 @@ body {
 
 .employee {
   position: relative;
-  display: inline-block;
+  display: none;
   width: 388px;
   height: 50px;
   margin-top: 5px;
   margin-left: 5px;
-}
-
-.employee:hover {
-  height: 94px;
 }
 
 .portrait {
@@ -94,8 +90,9 @@ body {
 }
 
 div.hire {
-  margin-top: 52px;
-  margin-left: 54px;
+  position: absolute;
+  top: 4px;
+  left: 2px;
   display: none;
 }
 
@@ -104,8 +101,9 @@ div.hire {
 }
 
 div.fire {
-  margin-top: 2px;
-  margin-left: 54px;
+  position: absolute;
+  bottom: 4px;
+  left: 2px;
   display: none;
 }
 
@@ -115,10 +113,21 @@ div.fire {
 
 a.hire {
   background-color: #77f;
+  border: 1px #555 solid;
+  box-shadow: 1px 1px 5px #000;
+  display: none;
 }
 
 a.fire {
   background-color: #f77;
+  border: 1px #555 solid;
+  box-shadow: 1px 1px 5px #000;
+  display: none;
+}
+
+.fixedwidth {
+  width: 7px;
+  display: inline-block;
 }
 
 #interactive {
@@ -165,10 +174,54 @@ a.fire {
   height: 250px;
 }
 
-#loc {
+#info {
   position: relative;
-  height: 70px;
+  height: 110px;
   text-align: center;
+}
+
+.pause {
+  position: absolute;
+  height: 44px;
+  width: 44px;
+  top: -22px;
+  right: -22px;
+  background-color: #55e;
+  border: 2px #22a solid;
+  border-radius: 25px;
+  box-shadow: 1px 1px 5px #000;
+}
+
+.pause:hover {
+  height: 50px;
+  width: 50px;
+  top: -25px;
+  right: -25px;
+}
+
+.pause:active {
+  height: 44px;
+  width: 44px;
+  top: -22px;
+  right: -22px;
+}
+
+.pause img {
+  margin-top: 9px;
+  height: 25px;
+  width: 25px;
+}
+
+.pause:hover img {
+  margin-top: 10px;
+  height: 29px;
+  width: 29px;
+}
+
+.pause:active img {
+  margin-top: 9px;
+  height: 25px;
+  width: 25px;
 }
 
 #locname {
@@ -218,6 +271,24 @@ a.fire {
   position: absolute;
   top: 50px;
   right: 5px;
+}
+
+.trainees {
+  position: absolute;
+  top: 70px;
+  left: 5px;
+}
+
+.productivity {
+  position: absolute;
+  top: 70px;
+  right: 5px;
+}
+
+.valuation {
+  position: absolute;
+  top: 90px;
+  left: 5px;
 }
 
 .bar {

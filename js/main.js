@@ -6,27 +6,26 @@ TODO:
 ====custom hire/fire amounts
 ====additional hire/fire buttons (double, halve, max, tree)
 ====auto-resolve dependencies option
---FUNCTIONALITY:
-====cash per click based on company size
-====hide employee types not yet needed
-====warnings for actions which will put you in the negative
 --FEATURES:
 ====productivity multipliers (new office, contentment, vacation time, ...)
 ===="branch inward" with top-level staying top level, and promoting up subordinates as needed
 ====departments (marketing, pr, hr, r&d, ...) (create departments one at a time as desired, hire/fire within)
+====lawyers and lawsuits and patents(1/100000 chance per employee per day, higher for fellows, researchers)
 ====takeovers of competing companies (other companies grow organically, purchaseable)
 ====lobbying
 ====upgrades (infrastructure, patents.. late game speed is appropriate, but early game would be slow)
+====disableable game-pausing popups for special opportunities (to promote playing over idling)
 --GUI:
 ====cash and revenue colors for pos/neg
 
 --STOCK:
-step one: valuation.  determines how much revenue IPO will bring in
 step two: IPO.  2-25% of company is sold for 50% of valuation.
 step three: trading.  instead of valuation, stock price is shown.  elements of randomness
 step four: sell-offs.  sell fractions of the company for additional capital
 step five: stock splitting
 step maybe: board of trustees controlling how company is run
+
+http://jsfiddle.net/4h17cjb5/
 */
 
 // main loop
@@ -37,8 +36,11 @@ function interval() {
   if (money.dollars < 0) {
     money.dollars = Math.floor(money.dollars * 1.001)
   }
+  tmp = money.dollars;
   money.earn(people.earnings());
   money.pay(places.rent(), true);
+  money.quarterly += (money.dollars - tmp);
+  people.worker.mature();
   display.status.age();
   display.refresh();
 }
@@ -61,53 +63,67 @@ function display() {
            + this.hirefire(type.iname) + "</div>";
   }
 
-  this.button = function(type, action, label) {
-    return "<a href='javascript:" + action + ";display.refresh();' class='" + type + " button'>" + label + "</a>";
+  this.button = function(id, type, action, label) {
+    return "<a id='" + id + "' href='javascript:" + action + ";display.refresh();' class='" + type + " button'>" + label + "</a>";
   }
 
   this.hirefire = function(type) {
     return "<div class='hire'>"
-           + this.button("hire","people.hire(people." + type + ")","+ 1")
-           + this.button("hire","people.hire(people." + type + ", 10)","+ 10")  
-           + this.button("hire","people.hire(people." + type + ", 100)","+ 100")
-           + this.button("hire","people.hire(people." + type + ", 1000)","+ 1000")
+           + this.button(type + "hire1","hire","people.hire(people." + type + ")","<span class='fixedwidth'>+</span> 1")
+           + this.button(type + "hire10","hire","people.hire(people." + type + ", 10)","<span class='fixedwidth'>+</span> 10")  
+           + this.button(type + "hire100","hire","people.hire(people." + type + ", 100)","<span class='fixedwidth'>+</span> 100")
+           + this.button(type + "hire1000","hire","people.hire(people." + type + ", 1000)","<span class='fixedwidth'>+</span> 1000")
            + "</div><div class='fire'>"
-           + this.button("fire","people.fire(people." + type + ")","- 1")
-           + this.button("fire","people.fire(people." + type + ", 10)","- 10")  
-           + this.button("fire","people.fire(people." + type + ", 100)","- 100")
-           + this.button("fire","people.fire(people." + type + ", 1000)","- 1000")
+           + this.button(type + "fire1","fire","people.fire(people." + type + ")","<span class='fixedwidth'>-</span> 1")
+           + this.button(type + "fire10","fire","people.fire(people." + type + ", 10)","<span class='fixedwidth'>-</span> 10")  
+           + this.button(type + "fire100","fire","people.fire(people." + type + ", 100)","<span class='fixedwidth'>-</span> 100")
+           + this.button(type + "fire1000","fire","people.fire(people." + type + ", 1000)","<span class='fixedwidth'>-</span> 1000")
            + "</div>"
   }
 
   this.init = function() {
     document.getElementById("top").innerHTML = "<table width='100%' height='100%'><tr><td valign='middle'><div id='body'>"
     + "<div id='employees'>"
-    + this.person(people.worker)
-    + this.person(people.manager)
-    + this.person(people.middleman)
-    + this.person(people.director)
-    + this.person(people.vp)
-    + this.person(people.fellow)
-    + this.person(people.officer)
-    + this.person(people.board)
-    + "</div><div id='interactive'><div id='loc' class='box'>"
-    + "<div id='locname'>Office Location: <span id='location'>Your Garage</span></div>"
-    + "<div id='buildings'>Buildings: <span id='bcount'>0</span>"
-    + this.button(null,"places.buy(places.building)","Buy") 
-    + this.button(null,"places.sell(places.building)","Sell")
-    + "</div><div id='campuses'>Campuses: <span id='ccount'>0</span>"
-    + this.button(null,"places.buy(places.campus)","Buy") 
-    + this.button(null,"places.sell(places.campus)","Sell") 
-    + "</div><div class='cap'>Capacity: <span id='capcount'>0 / 5</span></div>"
-    + "<div class='rent'>Rent: $<span id='rentamt'>0</span></div>"
-    + "<div class='income'>Revenue: $<span id='revenue'>0</span></div>"
-    + "<div id='upgrade'>" + this.button(null,"places.upgrade()","Upgrade") + "Cost: $<span id='upgradeamt'>400</span></div></div>"
-    + "<div id='moneys'>$" + money.dollars + "</div>"
-    + "<div class='coin'><img src='images/coin.png' onclick='money.earn(100);display.refresh()' /></div>"
-    + "</div><div class='bar box'>"
-    + "<div id='status'>" + this.status.get() + "</div>"
-    + "<div id='calendar'>" + this.status.date() + "</div>"
-    + "</div></div></td></tr></table>";
+      + this.person(people.worker)
+      + this.person(people.manager)
+      + this.person(people.middleman)
+      + this.person(people.director)
+      + this.person(people.vp)
+      + this.person(people.fellow)
+      + this.person(people.officer)
+      + this.person(people.board)
+    + "</div>"
+    + "<div id='interactive'>"
+      + "<div id='info' class='box'>"
+        + "<div class='pause' onclick='window.alert(\"Paused.  Click OK to resume.\")'><img src='images/pause.png' /></div>"
+        + "<div id='locname'>Office Location: <span id='location'>Your Garage</span></div>"
+        + "<div id='buildings'>Buildings: <span id='bcount'>0</span>"
+          + this.button(null,null,"places.buy(places.building)","Buy") 
+          + this.button(null,null,"places.sell(places.building)","Sell")
+        + "</div>"
+        + "<div id='campuses'>Campuses: <span id='ccount'>0</span>"
+          + this.button(null,null,"places.buy(places.campus)","Buy") 
+          + this.button(null,null,"places.sell(places.campus)","Sell") 
+        + "</div>"
+        + "<div class='cap'>Capacity: <span id='capcount'>0 / 5</span></div>"
+        + "<div class='rent'>Rent: $<span id='rentamt'>0</span></div>"
+        + "<div class='income'>Revenue: $<span id='revenue'>0</span></div>"
+        + "<div id='upgrade'>" + this.button(null,null,"places.upgrade()","Upgrade") + "Cost: $<span id='upgradeamt'>400</span></div>"
+        + "<div class='trainees'>Trainees: <span id='trainees'>0</span></div>"
+        + "<div class='productivity'>Productivity: <span id='productivity'>100</span>%</div>"
+        + "<div class='valuation'>Valuation: $<span id='valuation'>...</span></div>"
+      + "</div>"
+      + "<div id='moneys'>$" + money.dollars + "</div>"
+      + "<div class='coin'><img src='images/coin.png' onclick='money.coin()' /></div>"
+    + "</div>"
+    + "<div class='bar box'>"
+      + "<div id='status'>" + this.status.get() + "</div>"
+      + "<div id='calendar'>" + this.status.date() + "</div>"
+    + "</div>"
+    +"</div></td></tr></table>";
+    this.enable(people.worker.name);
+    this.enablea(people.worker.iname + "hire1");
+    this.enablea(people.worker.iname + "fire1");
   }
 
   this.setbg = function(src) {
@@ -119,6 +135,14 @@ function display() {
     document.getElementById("buildings").style.display = "block";
     document.getElementById("campuses").style.display = "block";
     document.getElementById("upgrade").innerHTML = "Cost: $<span id='upgradeamt'>81,000,000</span>";
+  }
+  
+  this.enable = function(element) {
+    document.getElementById(element).style.display = "block";
+  }
+  
+  this.enablea = function(element) {
+    document.getElementById(element).style.display = "inline";
   }
 
   this.refresh = function() {
@@ -138,6 +162,9 @@ function display() {
     document.getElementById("upgradeamt").innerHTML = places.upgrade(true).toLocaleString();
     document.getElementById("bcount").innerHTML = places.building.count.toLocaleString();
     document.getElementById("ccount").innerHTML = places.campus.count.toLocaleString();
+    document.getElementById("trainees").innerHTML = people.worker.hired.toLocaleString();
+    document.getElementById("productivity").innerHTML = (Math.ceil(people.productivity() * 100)).toLocaleString();
+    document.getElementById("valuation").innerHTML = money.value().toLocaleString();
     document.getElementById("status").innerHTML = display.status.get();
     document.getElementById("calendar").innerHTML = display.status.date();
   }
@@ -168,7 +195,12 @@ function display() {
         this.week += 1;
       }
       if (this.day % 91 == 0 ) {
-        this.quarter = (this.quarter + 1) % 4 + 1;
+        money.valuation[this.quarter] = money.quarterly;
+        money.quarterly = 0;
+        this.quarter = (this.quarter + 1) % 4;
+        if (this.quarter == 0) {
+          this.quarter = 4;
+        }
       }
       if (this.day % 365 == 0 ) {
         this.year += 1;
@@ -189,19 +221,47 @@ function display() {
 
 function money() {
   this.dollars = 0;
+  this.quarterly = 0;
+  this.valuation = [0, 0, 0, 0];
+    
+  this.project = function() {
+    return this.quarterly * (91 / (display.status.day % 91));
+  }
+    
+  this.value = function() {
+    if (display.status.year == 2014) {
+      return "...";
+    }
+    return Math.max(0,Math.floor(2000 * (people.worker.count + people.worker.hired)
+                                 + places.building.cost * places.building.count
+                                 + places.campus.cost * places.campus.count
+                                 + money.dollars
+                                 + 12 * this.project() 
+                                 - 8 * this.valuation[display.status.quarter]));
+  }
   
   this.pay = function(amount, force) {
     if (force || this.dollars >= amount) {
       this.dollars -= amount;
 	    return true;
     } else {
-      display.status.set("You do not have the $" + amount + " required.");
+      display.status.set("You do not have the $" + amount.toLocaleString() + " required.");
       return false;
     }
   }
   
   this.earn = function(amount) {
     this.dollars += amount;
+  }
+  
+  this.coin = function() {
+    mgmt = people.manager.count - people.middleman.count + people.director.count + people.vp.count - people.officer.count;
+    if (people.manager.count == 0) {
+      money.earn(100);
+    } else {
+      money.earn(Math.ceil(100 * mgmt * people.productivity()));
+    }
+    display.refresh();
   }
 }
 
@@ -211,22 +271,34 @@ function people() {
 	     + this.vp.size() + this.fellow.size() + this.officer.size() + this.board.size() 
   }
   
+  this.productivity = function() {
+    if (people.manager.count > 2) {
+      return Math.max(0.5,1 - Math.abs(1 - Math.sqrt(people.worker.count / (people.manager.count * 10))));
+    }
+    return 1;
+  }
+  
   this.earnings = function() {
-    retval = this.worker.count * this.worker.earn
-	       + this.manager.count * this.manager.earn
-	       + this.middleman.count * this.middleman.earn
-	       + this.director.count * this.director.earn
-	       + this.fellow.count * this.fellow.earn
-	       + this.vp.count * this.vp.earn
-	       + this.board.count * this.board.earn
-	       + this.officer.count * this.officer.earn;
+    retval = Math.ceil(this.worker.count * this.worker.earn * this.productivity())
+           - this.worker.hired * (this.worker.earn / 2)
+           + this.manager.count * this.manager.earn
+           + this.middleman.count * this.middleman.earn
+           + this.director.count * this.director.earn
+           + this.fellow.count * this.fellow.earn
+           + this.vp.count * this.vp.earn
+           + this.board.count * this.board.earn
+           + this.officer.count * this.officer.earn;
 	  return retval;
   }
   
   this.hire = function(type, count) {
     count = count || 1;
-    if (type.superior && type.count + count > Math.max(1,type.superior.count) * type.superior.sigma) {
+    if (type.superior && (type == this.worker ? type.count + type.hired : type.count) 
+        + count > Math.max(1,type.superior.count) * type.superior.sigma) {
       display.status.set("You do not have enough oversight to hire this person.");
+      display.enable(type.superior.name);
+      display.enablea(type.superior.iname + "hire1");
+      display.enablea(type.superior.iname + "fire1");
       return false;
     }
     if (type.limiter && type.count + count > type.limiter.count) {
@@ -238,13 +310,29 @@ function people() {
       return false;
     }
     if (money.pay(type.hire * count)) {
-      type.count += count;
+      if (type == people.worker) {
+        type.hired += count;
+      } else {
+        type.count += count;
+      }
+      if ((type.hired ? type.hired : 0) + type.count > 10) {
+        display.enablea(type.iname + "hire10");
+        display.enablea(type.iname + "fire10");
+      }
+      if ((type.hired ? type.hired : 0) + type.count > 100) {
+        display.enablea(type.iname + "hire100");
+        display.enablea(type.iname + "fire100");
+      }
+      if ((type.hired ? type.hired : 0) + type.count > 1000) {
+        display.enablea(type.iname + "hire1000");
+        display.enablea(type.iname + "fire1000");
+      }
     }
   }
   
   this.fire = function(type, count) {
     count = count || 1;
-    if (type.count - count < 0) {
+    if ((type == this.worker ? type.count + type.hired : type.count) - count < 0) {
 	    display.status.set("You can't fire people who don't work for you.");
       return false;
     }
@@ -261,7 +349,12 @@ function people() {
       return false;
     } 
     if (money.pay(type.fire * count)) {
-	    type.count -= count;
+      if (type == this.worker && count > type.count) {
+        type.hired -= (count - type.count);
+        type.count -= type.count;
+      } else {
+	      type.count -= count;
+      }
 	  }
   }
   
@@ -274,27 +367,27 @@ function people() {
     needmore = function(sub, nsub, sup, nsup) {
       return sub.count + nsub > Math.max(1,sup.count + nsup) * sup.sigma;
     }
-    while (needmore(people.worker, count, people.manager, nmanager)) { nmanager++ }
-    while (needmore(people.manager, nmanager, people.middleman, nmiddleman)) { nmiddleman++ }
-    while (needmore(people.middleman, nmiddleman, people.director, ndirector)) { ndirector++ }
-    while (needmore(people.director, ndirector, people.vp, nvp)) { nvp++ }
-    while (needmore(people.vp, nvp, people.officer, nofficer)) { nofficer++ }
-    if (count * people.worker.space + nmanager * people.manager.space
-        + nmiddleman * people.middleman.space + ndirector * people.director.space
-        + nvp * people.vp.space + nofficer * people.officer.space
-        + people.total() > places.capacity()) {
+    while (needmore(this.worker, count, this.manager, nmanager)) { nmanager++ }
+    while (needmore(this.manager, nmanager, this.middleman, nmiddleman)) { nmiddleman++ }
+    while (needmore(this.middleman, nmiddleman, this.director, ndirector)) { ndirector++ }
+    while (needmore(this.director, ndirector, this.vp, nvp)) { nvp++ }
+    while (needmore(this.vp, nvp, this.officer, nofficer)) { nofficer++ }
+    if (count * this.worker.space + nmanager * this.manager.space
+        + nmiddleman * this.middleman.space + ndirector * this.director.space
+        + nvp * this.vp.space + nofficer * this.officer.space
+        + this.total() > places.capacity()) {
       display.status.set("You don't have enough space for that many.");
       return false;
     }
-    if (money.pay(count * people.worker.hire + nmanager * people.manager.hire
-                  + nmiddleman * people.middleman.hire + ndirector * people.director.hire
-                  + nvp * people.vp.hire + nofficer * people.officer.hire)) {
-      people.worker.count += count;
-      people.manager.count += nmanager;
-      people.middleman.count += nmiddleman;
-      people.director.count += ndirector;
-      people.vp.count += nvp;
-      people.officer.count += nofficer;
+    if (money.pay(count * this.worker.hire + nmanager * this.manager.hire
+                  + nmiddleman * this.middleman.hire + ndirector * this.director.hire
+                  + nvp * this.vp.hire + nofficer * this.officer.hire)) {
+      this.worker.hired += count;
+      this.manager.count += nmanager;
+      this.middleman.count += nmiddleman;
+      this.director.count += ndirector;
+      this.vp.count += nvp;
+      this.officer.count += nofficer;
     }
   }
   
@@ -312,7 +405,7 @@ function people() {
 	  this.sigma = sigma;
 	  this.img = img;
 	  this.size = function() {
-	    return this.count * this.space;
+	    return (this.count + (this.hired ? this.hired : 0)) * this.space;
 	  }
   }
   
@@ -330,6 +423,16 @@ function people() {
   this.director.subordinate = this.middleman;
   this.middleman.subordinate = this.manager;
   this.manager.subordinate = this.worker;
+  this.worker.hired = 0;
+  
+  this.worker.mature = function() {
+    amount = 0;
+    for ( i = 0 ; i < this.hired ; i++) {
+      amount += Math.random() < 0.0476 ? 1 : 0;
+    }
+    this.hired -= amount;
+    this.count += amount;
+  }
 }
 
 function places() {
@@ -369,9 +472,15 @@ function places() {
 	  	display.setbg(this.building.img);
 	  	display.locswitch();
 	    }
-	  } else if (money.pay(this.upgradeto.rent)) {
-	    this.rented = this.upgradeto;
-	    display.setbg(this.upgradeto.img);
+	  } else {
+      if (people.earnings() - this.upgradeto.rent > 0 
+      || window.confirm("Are you sure?\nYour revenue will be: $" 
+                        + (people.earnings() - this.upgradeto.rent).toLocaleString())) {
+        if (money.pay(this.upgradeto.rent)) {
+          this.rented = this.upgradeto;
+          display.setbg(this.upgradeto.img);
+        }
+      }
 	  } 
   }
   
@@ -402,7 +511,7 @@ function places() {
   
   this.none = new this.renttype("Nothing",0,0,null);
   this.garage = new this.renttype("Your Garage",5,0,"garage.png");
-  this.loft = new this.renttype("A Grungy Loft",30,400,"loft.png");
+  this.loft = new this.renttype("A Grungy Loft",40,400,"loft.png");
   this.suite = new this.renttype("A Cramped Office Suite",100,2000,"suite.png");
   this.office = new this.renttype("A Modest Office",400,10000,"office.png");
   this.onestory = new this.renttype("One Floor of an Office Building",1000,30000,"onestory.png");
@@ -419,8 +528,8 @@ function places() {
 	  this.img = img;
   }
   
-  this.building = new this.owntype(5000,81000000,15000,"building.png");
-  this.campus = new this.owntype(25000,324000000,60000,"campus.png");
+  this.building = new this.owntype(10000,121000000,30000,"building.png");
+  this.campus = new this.owntype(50000,535000000,15000,"campus.png");
   
   this.rented = this.garage;
 }
