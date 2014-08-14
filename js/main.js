@@ -32,7 +32,10 @@ http://jsfiddle.net/4h17cjb5/
 
 window.setInterval(interval,2000);
 
+var PAUSED = false;
+
 function interval() {
+  if (PAUSED) { return; }
   if (money.dollars < 0) {
     money.dollars = Math.floor(money.dollars * 1.001)
   }
@@ -82,7 +85,7 @@ function display() {
   }
 
   this.init = function() {
-    document.getElementById("top").innerHTML = "<table width='100%' height='100%'><tr><td valign='middle'><div id='body'>"
+    document.body.innerHTML = "<table width='100%' height='100%'><tr><td valign='middle'><div id='body'>"
     + "<div id='employees'>"
       + this.person(people.worker)
       + this.person(people.manager)
@@ -95,7 +98,7 @@ function display() {
     + "</div>"
     + "<div id='interactive'>"
       + "<div id='info' class='box'>"
-        + "<div class='pause' onclick='window.alert(\"Paused.  Click OK to resume.\")'><img src='images/pause.png' /></div>"
+        + "<div class='pause' onclick='display.modal(\"Paused\",\"Resume\")'><img src='images/pause.png' /></div>"
         + "<div id='locname'>Office Location: <span id='location'>Your Garage</span></div>"
         + "<div id='buildings'>Buildings: <span id='bcount'>0</span>"
           + this.button(null,null,"places.buy(places.building)","Buy") 
@@ -112,6 +115,7 @@ function display() {
         + "<div class='trainees'>Trainees: <span id='trainees'>0</span></div>"
         + "<div class='productivity'>Productivity: <span id='productivity'>100</span>%</div>"
         + "<div class='valuation'>Valuation: $<span id='valuation'>...</span></div>"
+        + "<div class='ipo'>" + this.button("ipo",null,"money.ipo()","Go Public") + "</div>"
       + "</div>"
       + "<div id='moneys'>$" + money.dollars + "</div>"
       + "<div class='coin'><img src='images/coin.png' onclick='money.coin()' /></div>"
@@ -120,10 +124,34 @@ function display() {
       + "<div id='status'>" + this.status.get() + "</div>"
       + "<div id='calendar'>" + this.status.date() + "</div>"
     + "</div>"
-    +"</div></td></tr></table>";
+    + "</div></td></tr></table>"
+    + "<div id='overlay'></div>"
+    + "<div id='modal' class='lightbox'>"
+      + "<div id='innermodal'></div>"
+      + "<div id='modalbutton1' onclick='display.modalout(true);' class='box modalbutton'></div>"
+      + "<div id='modalbutton2' onclick='display.modalout(false);' class='box modalbutton'></div>"
+    + "</div>";
     this.enable(people.worker.name);
     this.enablea(people.worker.iname + "hire1");
     this.enablea(people.worker.iname + "fire1");
+  }
+  
+  this.modal = function(contents, button1, button2) {
+    PAUSED = true;
+    document.getElementById('innermodal').innerHTML = contents;
+    document.getElementById('modalbutton1').innerHTML = button1;
+    document.getElementById('modalbutton2').innerHTML = button2;
+    document.getElementById('modalbutton2').style.display = button2 ? "block" : "none";
+    document.getElementById('overlay').style.visibility = "visible";
+    m = document.getElementById('modal');
+    m.style.visibility = "visible";
+    m.style.margin = (window.innerHeight / 2 - m.offsetHeight / 2) + "px " + (window.innerWidth / 2 - m.offsetWidth / 2) + "px";
+  }
+  
+  this.modalout = function() {
+    document.getElementById('modal').style.visibility = "hidden";
+    document.getElementById('overlay').style.visibility = "hidden";
+    PAUSED = false;
   }
 
   this.setbg = function(src) {
@@ -255,10 +283,11 @@ function money() {
   }
   
   this.coin = function() {
-    mgmt = people.manager.count - people.middleman.count + people.director.count + people.vp.count - people.officer.count;
+    if (PAUSED) { return; }
     if (people.manager.count == 0) {
       money.earn(100);
     } else {
+      mgmt = people.manager.count - people.middleman.count + people.director.count + people.vp.count - people.officer.count;
       money.earn(Math.ceil(100 * mgmt * people.productivity()));
     }
     display.refresh();

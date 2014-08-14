@@ -7,6 +7,7 @@ body {
   margin: 0;
   background: url('../images/congruent_pentagon.png');
   vertical-align: middle;
+  -webkit-user-select: none;
 }
 
 #body {
@@ -16,14 +17,21 @@ body {
   border: 3px #000 solid;
   border-radius: 15px;
   margin: auto;
+  position: relative;
   font-family: "DPComic";
   font-size: 18px;
-  position: relative;
   color: #fff;
 }
 
 .box {
   background-color: rgba(0,0,0,0.8);
+  border: 2px #555 solid;
+  border-radius: 10px;
+  box-shadow: 1px 1px 5px #000;
+}
+
+.lightbox {
+  background-color: rgba(223,223,223,0.8);
   border: 2px #555 solid;
   border-radius: 10px;
   box-shadow: 1px 1px 5px #000;
@@ -160,6 +168,7 @@ a.fire {
   margin: 15px;
   width: 250px;
   height: 250px;
+  cursor: pointer;
 }
 
 .coin img:hover {
@@ -291,6 +300,16 @@ a.fire {
   left: 5px;
 }
 
+.ipo {
+  position: absolute;
+  top: 90px;
+  right: 5px;
+}
+
+#ipo {
+  display: none;
+}
+
 .bar {
   position: absolute;
   bottom: 5px;
@@ -309,4 +328,43 @@ a.fire {
   position: absolute;
   top: 1px;
   right: 5px;
+}
+
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: -webkit-radial-gradient(center, ellipse cover, rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.7) 1%,#000 100%); 
+  visibility: hidden;
+}
+
+#modal {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: "DPComic";
+  font-size: 18px;
+  visibility: hidden;
+  padding: 5px;
+  text-align: center;
+}
+
+#innermodal {
+  text-align: center;
+  margin: 5px 0px;
+}
+
+.modalbutton {
+  cursor: pointer;
+  color: #fff;
+  padding: 5px;
+  margin: 5px;
+  display: inline-block;
+}
+
+#modalbutton:hover {
+  background-color: #777;
+  color: #000
 }
