@@ -128,8 +128,8 @@ function display() {
     + "<div id='overlay'></div>"
     + "<div id='modal' class='lightbox'>"
       + "<div id='innermodal'></div>"
-      + "<div id='modalbutton1' onclick='display.modalout(true);' class='box modalbutton'></div>"
-      + "<div id='modalbutton2' onclick='display.modalout(false);' class='box modalbutton'></div>"
+      + "<div id='modalbutton1' onclick='display.modalout();' class='box modalbutton'></div>"
+      + "<div id='modalbutton2' onclick='display.modalout();' class='box modalbutton'></div>"
     + "</div>";
     this.enable(people.worker.name);
     this.enablea(people.worker.iname + "hire1");
@@ -140,8 +140,9 @@ function display() {
     PAUSED = true;
     document.getElementById('innermodal').innerHTML = contents;
     document.getElementById('modalbutton1').innerHTML = button1;
+    document.getElementById('modalbutton1').setAttribute("onclick", fn ? fn + "display.modalout()" : "display.modalout()");
     document.getElementById('modalbutton2').innerHTML = button2;
-    document.getElementById('modalbutton2').style.display = button2 ? "block" : "none";
+    document.getElementById('modalbutton2').style.display = button2 ? "inline-block" : "none";
     document.getElementById('overlay').style.visibility = "visible";
     m = document.getElementById('modal');
     m.style.visibility = "visible";
@@ -152,6 +153,27 @@ function display() {
     document.getElementById('modal').style.visibility = "hidden";
     document.getElementById('overlay').style.visibility = "hidden";
     PAUSED = false;
+  }
+  
+  this.sliderize = function(div,fn,min,max,range,scale) {
+    slider = document.createElement("div");
+    div.appendChild(slider);
+    div.setAttribute("style", "margin: 5px; height: 10px; width: " + (2 + range * scale) + "px; background-color: #555; position:relative; border: solid #555; border-width: 0px 5px; box-shadow: 0px 0px 3px #000;");
+    slider.setAttribute("style", "background-color: #ccc; border: 1px solid #000; top: -1px; height: 10px; width: 10px; position:absolute;");
+    slider.addEventListener('mousedown', 
+      function (event) {
+        document.body.style.cursor = "none";
+        addEventListener('mousemove', mv = function (event) {
+            val = Math.max(min * scale, Math.min(max * scale, event.clientX - div.getBoundingClientRect().left));
+            fn(Math.floor(val/scale));
+            slider.style.left = val - 5 + 'px';
+          }, false);
+        addEventListener('mouseup', function(event) {
+            removeEventListener('mousemove', mv, false);
+            removeEventListener('mouseup', this, false);
+            document.body.style.cursor = "default";
+          }, false);
+      }, false);
   }
 
   this.setbg = function(src) {
@@ -192,7 +214,7 @@ function display() {
     document.getElementById("ccount").innerHTML = places.campus.count.toLocaleString();
     document.getElementById("trainees").innerHTML = people.worker.hired.toLocaleString();
     document.getElementById("productivity").innerHTML = (Math.ceil(people.productivity() * 100)).toLocaleString();
-    document.getElementById("valuation").innerHTML = money.value().toLocaleString();
+    document.getElementById("valuation").innerHTML = t = money.value().toLocaleString() ? t : "...";
     document.getElementById("status").innerHTML = display.status.get();
     document.getElementById("calendar").innerHTML = display.status.date();
   }
@@ -251,6 +273,19 @@ function money() {
   this.dollars = 0;
   this.quarterly = 0;
   this.valuation = [0, 0, 0, 0];
+  
+  this.ipo = function() {
+    html = "<div>Initial Public Offering</div>"
+         + "<div id='iposlider'></div>"
+         + "<div>Sell <span id='ipopercent'>0</span>% for $<span id='ipovalue'>0</span></siv>";
+    display.modal(html,"OFFER","CANCEL");
+    display.sliderize(document.getElementById('iposlider'),
+                      function(x){
+                        document.getElementById('ipopercent').innerHTML = x;
+                        document.getElementById('ipovalue').innerHTML = Math.floor(money.value() * (x / 100)).toLocaleString();
+                      },
+                      5,25,100,2);
+  }
     
   this.project = function() {
     return this.quarterly * (91 / (display.status.day % 91));
@@ -260,6 +295,7 @@ function money() {
     if (display.status.year == 2014) {
       return "...";
     }
+    display.enablea("ipo");
     return Math.max(0,Math.floor(2000 * (people.worker.count + people.worker.hired)
                                  + places.building.cost * places.building.count
                                  + places.campus.cost * places.campus.count

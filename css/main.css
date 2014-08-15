@@ -364,7 +364,7 @@ a.fire {
   display: inline-block;
 }
 
-#modalbutton:hover {
+.modalbutton:hover {
   background-color: #777;
   color: #000
 }
