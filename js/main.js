@@ -115,6 +115,7 @@ function display() {
         + "<div class='trainees'>Trainees: <span id='trainees'>0</span></div>"
         + "<div class='productivity'>Productivity: <span id='productivity'>100</span>%</div>"
         + "<div class='valuation'>Valuation: $<span id='valuation'>...</span></div>"
+        + "<div class='stockprice'>Stock Price: $<span id='stockprice'>0</span></div>"
         + "<div class='ipo'>" + this.button("ipo",null,"money.ipo()","Go Public") + "</div>"
       + "</div>"
       + "<div id='moneys'>$" + money.dollars + "</div>"
@@ -136,11 +137,11 @@ function display() {
     this.enablea(people.worker.iname + "fire1");
   }
   
-  this.modal = function(contents, button1, button2) {
+  this.modal = function(contents, button1, button2, fn) {
     PAUSED = true;
     document.getElementById('innermodal').innerHTML = contents;
     document.getElementById('modalbutton1').innerHTML = button1;
-    document.getElementById('modalbutton1').setAttribute("onclick", fn ? fn + "display.modalout()" : "display.modalout()");
+    document.getElementById('modalbutton1').setAttribute("onclick", (fn ? fn + ";" : "") + "display.modalout()");
     document.getElementById('modalbutton2').innerHTML = button2;
     document.getElementById('modalbutton2').style.display = button2 ? "inline-block" : "none";
     document.getElementById('overlay').style.visibility = "visible";
@@ -187,6 +188,11 @@ function display() {
     document.getElementById("upgrade").innerHTML = "Cost: $<span id='upgradeamt'>81,000,000</span>";
   }
   
+  this.gopublic = function() {
+    document.getElementById("valuation").style.display = "none";
+    document.getElementById("stockprice").style.display = "block";
+  }
+  
   this.enable = function(element) {
     document.getElementById(element).style.display = "block";
   }
@@ -214,9 +220,14 @@ function display() {
     document.getElementById("ccount").innerHTML = places.campus.count.toLocaleString();
     document.getElementById("trainees").innerHTML = people.worker.hired.toLocaleString();
     document.getElementById("productivity").innerHTML = (Math.ceil(people.productivity() * 100)).toLocaleString();
-    document.getElementById("valuation").innerHTML = t = money.value().toLocaleString() ? t : "...";
+    document.getElementById("valuation").innerHTML = money.value().toLocaleString() ? money.value().toLocaleString() : "...";
+    document.getElementById("stockprice").innerHTML = money.stock().toLocaleString();
     document.getElementById("status").innerHTML = display.status.get();
     document.getElementById("calendar").innerHTML = display.status.date();
+  }
+  
+  this.coinrefresh = function() {
+    document.getElementById("moneys").innerHTML = "$" + money.dollars.toLocaleString();
   }
 
   this.status = function() {
@@ -273,12 +284,27 @@ function money() {
   this.dollars = 0;
   this.quarterly = 0;
   this.valuation = [0, 0, 0, 0];
+  this.stock = 10000000;
+  this.owned = 10000000;
+  this.ispublic = false;
   
+  this.sell = function(percent) {
+  shares = this.stock * (percent/100)
+    if (shares > this.owned) {
+      display.status.set("You don't own that much of the company.");
+      return false;
+    }
+    this.owned -= shares;
+    this.earn(shares * this.stock());
+    this.ispublic = true;
+    display.gopublic();
+  }
+  //3795 375 95 24 6 2
   this.ipo = function() {
     html = "<div>Initial Public Offering</div>"
          + "<div id='iposlider'></div>"
          + "<div>Sell <span id='ipopercent'>0</span>% for $<span id='ipovalue'>0</span></siv>";
-    display.modal(html,"OFFER","CANCEL");
+    display.modal(html,"OFFER","CANCEL","money.sell(parseInt(document.getElementById('ipopercent').innerHTML,10))");
     display.sliderize(document.getElementById('iposlider'),
                       function(x){
                         document.getElementById('ipopercent').innerHTML = x;
@@ -290,18 +316,22 @@ function money() {
   this.project = function() {
     return this.quarterly * (91 / (display.status.day % 91));
   }
+
+  this.stock = function() {
+    return Math.floor(this.value() / 100000)/100;
+  }
     
   this.value = function() {
     if (display.status.year == 2014) {
       return "...";
     }
     display.enablea("ipo");
-    return Math.max(0,Math.floor(2000 * (people.worker.count + people.worker.hired)
-                                 + places.building.cost * places.building.count
-                                 + places.campus.cost * places.campus.count
-                                 + money.dollars
-                                 + 12 * this.project() 
-                                 - 8 * this.valuation[display.status.quarter]));
+    return 2 * Math.max(0,Math.floor(2000 * (people.worker.count + people.worker.hired)
+                                     + places.building.cost * places.building.count
+                                     + places.campus.cost * places.campus.count
+                                     + money.dollars
+                                     + 12 * this.project() 
+                                     - 8 * this.valuation[display.status.quarter]));
   }
   
   this.pay = function(amount, force) {
@@ -319,14 +349,13 @@ function money() {
   }
   
   this.coin = function() {
-    if (PAUSED) { return; }
     if (people.manager.count == 0) {
       money.earn(100);
     } else {
       mgmt = people.manager.count - people.middleman.count + people.director.count + people.vp.count - people.officer.count;
       money.earn(Math.ceil(100 * mgmt * people.productivity()));
     }
-    display.refresh();
+    display.coinrefresh();
   }
 }
 

@@ -300,6 +300,13 @@ a.fire {
   left: 5px;
 }
 
+.stockprice{
+  position: absolute;
+  top: 90px;
+  left: 5px;
+  display: none;
+}
+
 .ipo {
   position: absolute;
   top: 90px;
